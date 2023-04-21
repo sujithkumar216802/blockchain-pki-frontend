@@ -12,7 +12,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<PrivateRoute Component={HomePage} isAuthenticated={false} />} />
+        <Route path="/" element={<PrivateRoute Component={<HomePage />} />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/entry" element={<InfoEntryPage />} />
         <Route component={<NotFoundPage />} />
