@@ -1,18 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MetaMaskOnboarding from '@metamask/onboarding';
 
 function LoginPage() {
 
-    const [metamaskConnected, setMetamaskConnected] = useState(false);
     const [buttonFeatures, setButtonFeatures] = useState({
         buttonText: 'Connect to Metamask',
         buttonDisabled: false,
         functionToCall: onboardMetamask
     });
     const navigate = useNavigate();
-
-    metamaskConnected ? navigate('/') : console.log('Metamask not connected');
 
     async function onboardMetamask() {
         if (isMetamaskInstalled()) {
@@ -41,11 +38,18 @@ function LoginPage() {
         });
     }
 
+    useEffect(() => {
+        onboardMetamask();
+        // eslint-disable-next-line
+    }, []);
+
     async function getAccounts() {
         const tempAccounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         console.log('Accounts: ', tempAccounts);
         if (tempAccounts.length > 0)
-            setMetamaskConnected(true);
+            navigate('/')
+        else
+            console.log('not logged in to metamask')
     }
 
     return (
