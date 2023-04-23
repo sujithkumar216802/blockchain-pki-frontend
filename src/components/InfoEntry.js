@@ -1,63 +1,8 @@
 import './InfoEntry.css'
-import React, { useReducer } from 'react';
+import React, { useEffect, useReducer } from 'react';
 
-function InfoEntryPage({type, handleSubmit}) {
-
-    // eslint-disable-next-line
-    const index = {
-        "subject": {
-            "commonName": 0,
-            "organization": 1,
-            "locality": 2,
-            "state": 3,
-            "country": 4,
-        },
-        "issuer": {
-            "commonName": 5,
-            "organization": 6,
-            "locality": 7,
-            "state": 8,
-            "country": 9,
-        },
-        "validity": {
-            "notBefore": 10,
-            "notAfter": 11,
-        },
-        "subjectAltName": {
-            "dnsNames": 12,
-            "ipAddresses": 13,
-            "emailAddresses": 14,
-            "uris": 15,
-        },
-        "publicKeyInfo": {
-            "algorithm": 16,
-            "keySize": 17,
-            "publicKey": 18
-        },
-        "miscellaneous": {
-            "version": 19,
-            "serialNumber": 20,
-            "signatureAlgorithm": 21,
-        },
-        "fingerprints": {
-            "sha1": 22,
-            "_sha256": 23,
-        },
-        "basicConstraints": {
-            "isCA": 24,
-            "pathLenConstraint": 25,
-        },
-        "extensions": {
-            "subjectAddress": 26,
-            "issuerAddress": 27,
-            "blockchainName": 28,
-            "caAddress": 29,
-        },
-        "subjectKeyIdentifier": 30,
-        "authorityKeyIdentifier": 31,
-        "signature": 32,
-    }
-
+// type: root, user, view
+function InfoEntryPage({ type, handleSubmit, viewFormValues }) {
     const preDefinedValues = {
         'root': ['Blockchain Root CA', 'Root CA', 'TRZ', 'TN', 'IN', 'Blockchain Root CA', 'Root CA', 'TRZ', 'TN', 'IN', '1681161711', '1781161711', '', '', '', '', 'Elliptic Curve', '256', '3056301006072a8648ce3d020106052b8104000a034200046f3982dceaaabf05c2f9edc8c2e605d8a6e4d82d98dec331691180e0293ec34752fcf59134e2dced21b9db9ab3ab1da2d9c89cc6a8faa5e81baaddba7c97dfc0', '3', '0', 'sha256WithRSAEncryption', 'sha1', 'sha256', 'true', '0', '', '', 'Sepolia', '', '5e024eb8c9cfca99bae22262cea1ceeb372e2998', 'AuthorityKeyIdentifier', 'Signature'],
         'sub': ['Blockchain Sub CA', 'Sub CA', 'TRZ', 'TN', 'IN', '', '', '', '', '', '1681161711', '1781161711', '', '', '', '', 'Elliptic Curve', '256', '3056301006072a8648ce3d020106052b8104000a034200040e441fed3b0292395af0f029fa906f6c80d1d9bde83f1dd520172a1645a3917911ec98035032fd153794cc9bc145d69739c02cfd8e5dc6cc3049a8a627ace070', '3', '', 'sha256WithRSAEncryption', 'sha1', 'sha256', 'true', '0', '', '', 'Sepolia', '', '930e9bc9c271792780f01e1f6979671a07f57b47', 'AuthorityKeyIdentifier', 'Signature'],
@@ -69,6 +14,7 @@ function InfoEntryPage({type, handleSubmit}) {
     const labels = ["Common Name: ", "Organization: ", "Locality: ", "State: ", "Country: ", "CommonName: ", "Organization: ", "Locality: ", "State: ", "Country: ", "Not Before: ", "Not After: ", "DNS Names: ", "IP Addresses: ", "Email Addresses: ", "URIs: ", "PublicKey Algorithm: ", "PublicKey Size: ", "PublicKey Value: ", "Version: ", "Serial Number: ", "Signature Algorithm: ", "SHA1: ", "SHA256: ", "Is CA: ", "Path Length Constraint: ", "Subject Address: ", "Issuer Address: ", "Blockchain Name: ", "CA Address: ", "Subject Key Identifier: ", "Authority Key Identifier: ", "Signature: "];
 
     function formReducer(state, action) {
+        if (action.view) return viewFormValues;
         const { index, value, copy } = action;
         if (copy) {
             return preDefinedValues[copy];
@@ -80,11 +26,20 @@ function InfoEntryPage({type, handleSubmit}) {
         }
         return tempState;
     }
+
     const [formValues, dispatchFormValues] = useReducer(formReducer, ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+    
     function submit(event) {
         event.preventDefault();
         handleSubmit(formValues)
     }
+
+    useEffect(() => {
+        if (type === 'view') {
+            dispatchFormValues({ 'view': true });
+        }
+        // eslint-disable-next-line
+    }, []);
 
     return (
         <div className="info-entry">
@@ -94,28 +49,28 @@ function InfoEntryPage({type, handleSubmit}) {
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[0]}>{labels[0]}</label>
-                    <input type="text" id={keys[0]} value={formValues[0]} onChange={(event) => dispatchFormValues({ 'index': 0, 'value': event.target.value })} required />
+                    <input type="text" id={keys[0]} value={formValues[0]} onChange={(event) => dispatchFormValues({ 'index': 0, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[1]}>{labels[1]}</label>
-                    <input type="text" id={keys[1]} value={formValues[1]} onChange={(event) => dispatchFormValues({ 'index': 1, 'value': event.target.value })} required />
+                    <input type="text" id={keys[1]} value={formValues[1]} onChange={(event) => dispatchFormValues({ 'index': 1, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[2]}>{labels[2]}</label>
-                    <input type="text" id={keys[2]} value={formValues[2]} onChange={(event) => dispatchFormValues({ 'index': 2, 'value': event.target.value })} required />
+                    <input type="text" id={keys[2]} value={formValues[2]} onChange={(event) => dispatchFormValues({ 'index': 2, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[3]}>{labels[3]}</label>
-                    <input type="text" id={keys[3]} value={formValues[3]} onChange={(event) => dispatchFormValues({ 'index': 3, 'value': event.target.value })} required />
+                    <input type="text" id={keys[3]} value={formValues[3]} onChange={(event) => dispatchFormValues({ 'index': 3, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[4]}>{labels[4]}</label>
-                    <input type="text" id={keys[4]} value={formValues[4]} onChange={(event) => dispatchFormValues({ 'index': 4, 'value': event.target.value })} required />
+                    <input type="text" id={keys[4]} value={formValues[4]} onChange={(event) => dispatchFormValues({ 'index': 4, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 {type === 'root' ? (
@@ -154,71 +109,98 @@ function InfoEntryPage({type, handleSubmit}) {
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[10]}>{labels[10]}</label>
-                    <input type="text" id={keys[10]} value={formValues[10]} onChange={(event) => dispatchFormValues({ 'index': 10, 'value': event.target.value })} required />
+                    <input type="text" id={keys[10]} value={formValues[10]} onChange={(event) => dispatchFormValues({ 'index': 10, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[11]}>{labels[11]}</label>
-                    <input type="text" id={keys[11]} value={formValues[11]} onChange={(event) => dispatchFormValues({ 'index': 11, 'value': event.target.value })} required />
+                    <input type="text" id={keys[11]} value={formValues[11]} onChange={(event) => dispatchFormValues({ 'index': 11, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 <div className="formHeading">Alternative Names</div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[12]}>{labels[12]}</label>
-                    <input type="text" id={keys[12]} value={formValues[12]} onChange={(event) => dispatchFormValues({ 'index': 12, 'value': event.target.value })} />
+                    <input type="text" id={keys[12]} value={formValues[12]} onChange={(event) => dispatchFormValues({ 'index': 12, 'value': event.target.value })} disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[13]}>{labels[13]}</label>
-                    <input type="text" id={keys[13]} value={formValues[13]} onChange={(event) => dispatchFormValues({ 'index': 13, 'value': event.target.value })} />
+                    <input type="text" id={keys[13]} value={formValues[13]} onChange={(event) => dispatchFormValues({ 'index': 13, 'value': event.target.value })} disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[14]}>{labels[14]}</label>
-                    <input type="text" id={keys[14]} value={formValues[14]} onChange={(event) => dispatchFormValues({ 'index': 14, 'value': event.target.value })} />
+                    <input type="text" id={keys[14]} value={formValues[14]} onChange={(event) => dispatchFormValues({ 'index': 14, 'value': event.target.value })} disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[15]}>{labels[15]}</label>
-                    <input type="text" id={keys[15]} value={formValues[15]} onChange={(event) => dispatchFormValues({ 'index': 15, 'value': event.target.value })} />
+                    <input type="text" id={keys[15]} value={formValues[15]} onChange={(event) => dispatchFormValues({ 'index': 15, 'value': event.target.value })} disabled={type === 'view'} />
                 </div>
 
                 <div className="formHeading">PublicKey</div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[16]}>{labels[16]}</label>
-                    <input type="text" id={keys[16]} value={formValues[16]} onChange={(event) => dispatchFormValues({ 'index': 16, 'value': event.target.value })} required />
+                    <input type="text" id={keys[16]} value={formValues[16]} onChange={(event) => dispatchFormValues({ 'index': 16, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[17]}>{labels[17]}</label>
-                    <input type="text" id={keys[17]} value={formValues[17]} onChange={(event) => dispatchFormValues({ 'index': 17, 'value': event.target.value })} required />
+                    <input type="text" id={keys[17]} value={formValues[17]} onChange={(event) => dispatchFormValues({ 'index': 17, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[18]}>{labels[18]}</label>
-                    <input type="text" id={keys[18]} value={formValues[18]} onChange={(event) => dispatchFormValues({ 'index': 18, 'value': event.target.value })} required />
+                    <input type="text" id={keys[18]} value={formValues[18]} onChange={(event) => dispatchFormValues({ 'index': 18, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 <div className="formHeading">Basic Constraint</div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[24]}>{labels[24]}</label>
-                    <input type="text" id={keys[24]} value={formValues[24]} onChange={(event) => dispatchFormValues({ 'index': 24, 'value': event.target.value })} required />
+                    <input type="text" id={keys[24]} value={formValues[24]} onChange={(event) => dispatchFormValues({ 'index': 24, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
                 <div className="inputWrapper">
                     <label htmlFor={keys[25]}>{labels[25]}</label>
-                    <input type="text" id={keys[25]} value={formValues[25]} onChange={(event) => dispatchFormValues({ 'index': 25, 'value': event.target.value })} required />
+                    <input type="text" id={keys[25]} value={formValues[25]} onChange={(event) => dispatchFormValues({ 'index': 25, 'value': event.target.value })} required disabled={type === 'view'} />
                 </div>
 
-                <button type="submit">Submit</button>
+                {type !== 'view' ?
+                    <button type="submit">Submit</button> :
+                    <React.Fragment>
+                        <div className="formHeading">miscellaneous</div>
+
+                        <div className="inputWrapper">
+                            <label htmlFor={keys[20]}>{labels[20]}</label>
+                            <input type="text" id={keys[20]} value={formValues[20]} required disabled />
+                        </div>
+
+                        <div className="inputWrapper">
+                            <label htmlFor={keys[26]}>{labels[26]}</label>
+                            <input type="text" id={keys[26]} value={formValues[26]} required disabled />
+                        </div>
+
+                        <div className="inputWrapper">
+                            <label htmlFor={keys[27]}>{labels[27]}</label>
+                            <input type="text" id={keys[27]} value={formValues[27]} required disabled />
+                        </div>
+
+                        <div className="inputWrapper">
+                            <label htmlFor={keys[29]}>{labels[29]}</label>
+                            <input type="text" id={keys[29]} value={formValues[29]} required disabled />
+                        </div>
+                    </React.Fragment>
+                }
             </form>
-            <button onClick={() => dispatchFormValues({ 'copy': 'root' })}>Fill Root CA Values</button>
-            <button onClick={() => dispatchFormValues({ 'copy': 'sub' })}>Fill Sub CA Values</button>
-            <button onClick={() => dispatchFormValues({ 'copy': 'user' })}>Fill User Values</button>
-            <button onClick={() => dispatchFormValues({ 'copy': 'reject' })}>Fill Reject User Values</button>
+            {type !== 'view' ? <div>
+                <button onClick={() => dispatchFormValues({ 'copy': 'root' })}>Fill Root CA Values</button>
+                <button onClick={() => dispatchFormValues({ 'copy': 'sub' })}>Fill Sub CA Values</button>
+                <button onClick={() => dispatchFormValues({ 'copy': 'user' })}>Fill User Values</button>
+                <button onClick={() => dispatchFormValues({ 'copy': 'reject' })}>Fill Reject User Values</button>
+            </div> : null}
         </div>
     );
 }
