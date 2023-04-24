@@ -34,9 +34,11 @@ function HomePage() {
     return (
         <div>
             <h1>Home</h1>
-            <p>Accounts: {accounts}</p>
-            <button onClick={toRootCa}>Become a root CA</button>
-            <button onClick={toConnectToContract}>Connect to contract</button>
+            <div className="center">
+                <p>Accounts: {accounts}</p>
+                <button onClick={toRootCa}>Become a root CA</button>
+                <button onClick={toConnectToContract}>Connect to contract</button>
+            </div>
         </div>
     );
 }

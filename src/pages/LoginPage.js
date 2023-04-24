@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MetaMaskOnboarding from '@metamask/onboarding';
+import './LoginPage.css'
 
 function LoginPage() {
 
@@ -53,10 +54,12 @@ function LoginPage() {
     }
 
     return (
-        <div>
+        <React.Fragment>
             <h1>Login</h1>
-            <button disabled={buttonFeatures.buttonDisabled} onClick={buttonFeatures.functionToCall} >{buttonFeatures.buttonText}</button>
-        </div >
+            <div className="center">
+                <button id="loginButton" disabled={buttonFeatures.buttonDisabled} onClick={buttonFeatures.functionToCall} >{buttonFeatures.buttonText}</button>
+            </div >
+        </React.Fragment>
     );
 }
 

@@ -1,0 +1,15 @@
+#ConnectToContract {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+input[type=radio] {
+    transform: scale(1.5);
+    width: 10vw;
+}
+
+.wideLabel {
+    width: 60vw;
+}

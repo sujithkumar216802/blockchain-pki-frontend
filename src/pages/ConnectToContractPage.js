@@ -3,6 +3,7 @@ import React, { useState, useEffect, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
 import pkiJson from '../contracts/PKI.json';
 import InfoEntryPage from '../components/InfoEntry';
+import './ConnectToContractPage.css';
 
 function ConnectToContractPage() {
 
@@ -79,11 +80,10 @@ function ConnectToContractPage() {
     const [renderInfo, setRenderInfo] = useReducer(renderReducer, defaultRenderInfo);
 
     function renderReducer(state, action) {
-        var tempState = { ...state, ...action };
-        if (action.renderOption !== undefined) {
-            if (action.renderOption !== state.renderOption) tempState = defaultRenderInfo
-            tempState.renderOption = action.renderOption;
-        }
+        let tempState = { ...state, ...action };
+        if ((action.renderOption !== undefined && action.renderOption !== state.renderOption) || action.reset) tempState = defaultRenderInfo;
+        if (action.reset) tempState.renderOption = state.renderOption;
+        if (action.renderOption !== undefined) tempState.renderOption = action.renderOption;
         switch (tempState.renderOption) {
             case 'requestCertificate':
                 break;
@@ -125,6 +125,7 @@ function ConnectToContractPage() {
 
     // 0x9142A507e93233A51219973C5DBe25E5789D135c
     async function connectToContract() {
+        console.log('hekki');
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
@@ -164,7 +165,9 @@ function ConnectToContractPage() {
         const serialNumber = event.target.serialNumber.value;
         console.log('serialNumber: ', serialNumber);
         try {
+            console.time('Execution Time');
             const certificate = await contractDetails.contract["getCertificate(uint256)"](serialNumber);
+            console.timeEnd('Execution Time');
             console.log('certificate: ', certificate);
             setRenderInfo({ 'renderOption': 'getCertificate', 'certificate': certificate });
         }
@@ -282,42 +285,55 @@ function ConnectToContractPage() {
 
         switch (renderInfo.renderOption) {
             case 'requestCertificate':
-                if (renderInfo.showSerialNumber) return <div><p>Serial Number: {renderInfo.serialNumber}</p></div>;
+                if (renderInfo.showSerialNumber) return (
+                    <div>
+                        <p>Serial Number: {renderInfo.serialNumber}</p>
+                        <button onClick={() => setRenderInfo({ 'reset': true })}>Reset</button>
+                    </div>);
                 return <InfoEntryPage key='user' type='user' handleSubmit={requestCertificate} />;
             case 'getCertificateStatus':
-                return (<form onSubmit={getCertificateStatus}>
-                    <div className="inputWrapper">
-                        <label htmlFor="serialNumber">Serial No. : </label>
-                        <input key="getCertificateStatus" type="number" id="serialNumber" value={renderInfo.serialNumber} onChange={(event) => setRenderInfo({ 'serialNumber': event.target.value })} required />
-                    </div>
-                    <button type="submit">Get Certificate Status</button>
-                    {renderInfo.status !== '' ? <p>Status: {renderInfo.status}</p> : null}
-                </form>);
-            case 'getCertificate':
-                if (renderInfo.certificate.length === 0) {
-                    return (<form onSubmit={getCertificate}>
+                return (
+                    <form onSubmit={getCertificateStatus}>
                         <div className="inputWrapper">
                             <label htmlFor="serialNumber">Serial No. : </label>
-                            <input key="getCertificate" type="number" id="serialNumber" value={renderInfo.serialNumber} onChange={(event) => setRenderInfo({ 'serialNumber': event.target.value })} required />
+                            <input key="getCertificateStatus" type="number" id="serialNumber" value={renderInfo.serialNumber} onChange={(event) => setRenderInfo({ 'serialNumber': event.target.value })} required />
                         </div>
-                        <button type="submit">Get Certificate</button>
+                        <button type="submit">Get Certificate Status</button>
+                        {renderInfo.status !== '' ? <p>Status: {renderInfo.status}</p> : null}
                     </form>);
-                }
-                return <InfoEntryPage key='view' type='view' viewFormValues={renderInfo.certificate} handleSubmit={requestCertificate} />
+            case 'getCertificate':
+                return (
+                    <React.Fragment>
+                        <form onSubmit={getCertificate}>
+                            <div className="inputWrapper">
+                                <label htmlFor="serialNumber">Serial No. : </label>
+                                <input key="getCertificate" type="number" id="serialNumber" value={renderInfo.serialNumber} onChange={(event) => setRenderInfo({ 'serialNumber': event.target.value })} required />
+                            </div>
+                            <button type="submit">Get Certificate</button>
+                        </form>
+                        {renderInfo.certificate.length !== 0 ? <InfoEntryPage key='view' type='view' viewFormValues={renderInfo.certificate} handleSubmit={requestCertificate} /> : null}
+                    </React.Fragment>
+                );
             case 'OldestPendingCertificate':
                 if (renderInfo.isPendingCertificate) {
                     if (renderInfo.showSerialNumber) {
-                        return (<div>Completed. Check Status of Serial Number {renderInfo.serialNumber}</div>);
+                        return (
+                            <React.Fragment>
+                                <div>Completed. Check Status of Serial Number {renderInfo.serialNumber}</div>
+                                <button onClick={() => setRenderInfo({ 'reset': true })}>Reset</button>
+                            </React.Fragment>);
                     }
                     return (
                         <div>
                             <InfoEntryPage type='view' viewFormValues={renderInfo.certificate} handleSubmit={requestCertificate} />
                             <form onSubmit={issuePendingCertificate}>
-                                <label htmlFor="signature">Signature: </label>
-                                <input key="OldestPendingCertificate" type="text" id="signature" required />
+                                <div className="inputWrapper">
+                                    <label htmlFor="signature">Signature: </label>
+                                    <input key="OldestPendingCertificate" type="text" id="signature" required />
+                                </div>
                                 <button type="submit">Issue</button>
+                                <button onClick={rejectPendingCertificate}>Reject</button>
                             </form>
-                            <button onClick={rejectPendingCertificate}>Reject</button>
                         </div>
                     )
                 }
@@ -326,41 +342,62 @@ function ConnectToContractPage() {
                 }
             case 'revokeCertificate':
                 if (renderInfo.showSerialNumber) {
-                    return <div>Completed. Check Status of Serial Number {renderInfo.serialNumber}</div>;
+                    return (
+                        <React.Fragment>
+                            <div>Completed. Check Status of Serial Number {renderInfo.serialNumber}</div>
+                            <button onClick={() => setRenderInfo({ 'reset': true })}>Reset</button>
+                        </React.Fragment>
+                    );
                 }
-                return (<form onSubmit={revokeCertificate}>
-                    <div className="inputWrapper">
-                        <label htmlFor="serialNumber">Serial No. : </label>
-                        <input key="revokeCertificate" type="number" id="serialNumber" value={renderInfo.serialNumber} onChange={(event) => setRenderInfo({ 'serialNumber': event.target.value })} required />
-                    </div>
-                    <button type="submit">Revoke Certificate</button>
-                </form>);
+                return (
+                    <form onSubmit={revokeCertificate}>
+                        <div className="inputWrapper">
+                            <label htmlFor="serialNumber">Serial No. : </label>
+                            <input key="revokeCertificate" type="number" id="serialNumber" value={renderInfo.serialNumber} onChange={(event) => setRenderInfo({ 'serialNumber': event.target.value })} required />
+                        </div>
+                        <button type="submit">Revoke Certificate</button>
+                    </form>);
             default:
                 return null;
         }
     }
 
     return (
-        <div>
-            Contract
+        <div id="ConnectToContract">
+            <h1>Contract</h1>
             {contractDetails.contract == null ?
                 <div className="inputWrapper">
                     <label htmlFor="contractAddress">Contract Address</label>
                     <input type="text" id="contractAddress" value={contractDetails.contractAddress} onChange={(event) => setContractDetails({ ...contractDetails, 'contractAddress': event.target.value })} />
                     <button onClick={connectToContract}>Connect</button>
                 </div> :
-                <div>
+                <div id="ConnectToContract">
                     <p>Contract Address: {contractDetails.contract.address}</p>
-                    <div onChange={(event) => setRenderInfo({ 'renderOption': event.target.value })}>
-                        <form><label htmlFor="getCertificateStatus">Get Certificate Status</label><input checked={renderInfo.renderOption === "getCertificateStatus"} type="radio" value="getCertificateStatus" id="getCertificateStatus" name="option" /></form>
-                        <form><label htmlFor="getCertificate">Get Certificate</label><input checked={renderInfo.renderOption === "getCertificate"} type="radio" value="getCertificate" name="option" /></form>
+                    <form onChange={(event) => setRenderInfo({ 'renderOption': event.target.value })}>
+                        <div className="inputWrapper">
+                            <label className="wideLabel" htmlFor="getCertificateStatus">Get Certificate Status</label>
+                            <input checked={renderInfo.renderOption === "getCertificateStatus"} type="radio" value="getCertificateStatus" id="getCertificateStatus" name="option" />
+                        </div>
+                        <div className="inputWrapper">
+                            <label className="wideLabel" htmlFor="getCertificate">Get Certificate</label>
+                            <input checked={renderInfo.renderOption === "getCertificate"} type="radio" value="getCertificate" name="option" />
+                        </div>
                         {contractDetails.isOwner ?
-                            <div>
-                                <form><label htmlFor="OldestPendingCertificate">Get Oldest Pending Certificate</label><input checked={renderInfo.renderOption === "OldestPendingCertificate"} type="radio" value="OldestPendingCertificate" name="option" /></form>
-                                <form><label htmlFor="revokeCertificate">Revoke Certificate</label><input checked={renderInfo.renderOption === "revokeCertificate"} type="radio" value="revokeCertificate" name="option" /></form>
-                            </div>
-                            : <form><label htmlFor="requestCertificate">Request Certificate</label> <input checked={renderInfo.renderOption === "requestCertificate"} type="radio" value="requestCertificate" name="option" /></form>}
-                    </div>
+                            <React.Fragment>
+                                <div className="inputWrapper">
+                                    <label className="wideLabel" htmlFor="OldestPendingCertificate">Get Oldest Pending Certificate</label>
+                                    <input checked={renderInfo.renderOption === "OldestPendingCertificate"} type="radio" value="OldestPendingCertificate" name="option" />
+                                </div>
+                                <div className="inputWrapper">
+                                    <label className="wideLabel" htmlFor="revokeCertificate">Revoke Certificate</label>
+                                    <input checked={renderInfo.renderOption === "revokeCertificate"} type="radio" value="revokeCertificate" name="option" />
+                                </div>
+                            </React.Fragment>
+                            : <div className="inputWrapper">
+                                <label className="wideLabel" htmlFor="requestCertificate">Request Certificate</label>
+                                <input checked={renderInfo.renderOption === "requestCertificate"} type="radio" value="requestCertificate" name="option" />
+                            </div>}
+                    </form>
                     {renderSwitch()}
                 </div>
             }
