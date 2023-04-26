@@ -380,22 +380,22 @@ function ConnectToContractPage() {
                         </div>
                         <div className="inputWrapper">
                             <label className="wideLabel" htmlFor="getCertificate">Get Certificate</label>
-                            <input checked={renderInfo.renderOption === "getCertificate"} type="radio" value="getCertificate" name="option" />
+                            <input checked={renderInfo.renderOption === "getCertificate"} type="radio" id="getCertificate" value="getCertificate" name="option" />
                         </div>
                         {contractDetails.isOwner ?
                             <React.Fragment>
                                 <div className="inputWrapper">
                                     <label className="wideLabel" htmlFor="OldestPendingCertificate">Get Oldest Pending Certificate</label>
-                                    <input checked={renderInfo.renderOption === "OldestPendingCertificate"} type="radio" value="OldestPendingCertificate" name="option" />
+                                    <input checked={renderInfo.renderOption === "OldestPendingCertificate"} type="radio" id="OldestPendingCertificate" value="OldestPendingCertificate" name="option" />
                                 </div>
                                 <div className="inputWrapper">
                                     <label className="wideLabel" htmlFor="revokeCertificate">Revoke Certificate</label>
-                                    <input checked={renderInfo.renderOption === "revokeCertificate"} type="radio" value="revokeCertificate" name="option" />
+                                    <input checked={renderInfo.renderOption === "revokeCertificate"} type="radio" id="revokeCertificate" value="revokeCertificate" name="option" />
                                 </div>
                             </React.Fragment>
                             : <div className="inputWrapper">
                                 <label className="wideLabel" htmlFor="requestCertificate">Request Certificate</label>
-                                <input checked={renderInfo.renderOption === "requestCertificate"} type="radio" value="requestCertificate" name="option" />
+                                <input checked={renderInfo.renderOption === "requestCertificate"} type="radio" id="requestCertificate" value="requestCertificate" name="option" />
                             </div>}
                     </form>
                     {renderSwitch()}
