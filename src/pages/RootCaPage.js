@@ -62,6 +62,8 @@ function RootCaPage() {
 
     const [accounts, setAccounts] = useState([]);
     const [contract, setContract] = useState(null);
+    const [loading, setLoading] = useState(null);
+
     const navigate = useNavigate();
 
     async function connectMetaMask() {
@@ -80,6 +82,7 @@ function RootCaPage() {
     }, []);
 
     async function handleSubmit(formValues) {
+        setLoading(true);
         // check values
         // end check values
         try {
@@ -105,13 +108,16 @@ function RootCaPage() {
         catch (err) {
             console.error('error occured while connecting to contract: ', err);
         }
+        setLoading(false);
     };
 
     return (
         <div>
             <h1>Root CA Creation</h1>
-            {contract ? <p>Contract Created, Address: {contract.address}</p> : <InfoEntryPage type='root' handleSubmit={handleSubmit} />}
-        </div>
+            {loading ? <p className="center">Loading...</p> :
+                (contract ? <p>Contract Created, Address: {contract.address}</p> : <InfoEntryPage type='root' handleSubmit={handleSubmit} />)
+            }
+        </div >
     );
 }
 

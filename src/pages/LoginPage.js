@@ -5,11 +5,13 @@ import './LoginPage.css'
 
 function LoginPage() {
 
-    const [buttonFeatures, setButtonFeatures] = useState({
+    const buttonFeaturesDefault = {
         buttonText: 'Connect to Metamask',
         buttonDisabled: false,
         functionToCall: onboardMetamask
-    });
+    };
+    
+    const [buttonFeatures, setButtonFeatures] = useState(buttonFeaturesDefault);
     const navigate = useNavigate();
 
     async function onboardMetamask() {
@@ -30,6 +32,10 @@ function LoginPage() {
     }
 
     function installMetaMask() {
+        if (isMetamaskInstalled()) {
+            setButtonFeatures(buttonFeaturesDefault);
+            return; 
+        }
         const onboarding = new MetaMaskOnboarding();
         onboarding.startOnboarding();
         setButtonFeatures({
@@ -54,12 +60,12 @@ function LoginPage() {
     }
 
     return (
-        <React.Fragment>
+        <div id="login-page">
             <h1>Login</h1>
             <div className="center">
                 <button id="loginButton" disabled={buttonFeatures.buttonDisabled} onClick={buttonFeatures.functionToCall} >{buttonFeatures.buttonText}</button>
             </div >
-        </React.Fragment>
+        </div>
     );
 }
 

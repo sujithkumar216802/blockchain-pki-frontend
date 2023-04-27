@@ -3,6 +3,14 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+}
+
+#login-page {
+    display: flex;
+    flex-flow: column;
     height: 100%;
 }
 

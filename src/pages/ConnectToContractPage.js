@@ -125,7 +125,6 @@ function ConnectToContractPage() {
 
     // 0x9142A507e93233A51219973C5DBe25E5789D135c
     async function connectToContract() {
-        console.log('hekki');
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
