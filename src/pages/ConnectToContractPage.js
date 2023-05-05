@@ -1,9 +1,9 @@
-import { ethers } from "ethers";
 import React, { useState, useEffect, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
-import pkiJson from '../contracts/PKI.json';
+import index from '../utils/index';
 import InfoEntryPage from '../components/InfoEntry';
 import './ConnectToContractPage.css';
+import { connect, deploy } from "../utils/ContractUtils";
 
 function ConnectToContractPage() {
 
@@ -13,63 +13,8 @@ function ConnectToContractPage() {
         2: 'Revoked',
         3: 'Rejected',
         4: 'Expired',
-    }
+    };
 
-    const index = {
-        "subject": {
-            "commonName": 0,
-            "organization": 1,
-            "locality": 2,
-            "state": 3,
-            "country": 4,
-        },
-        "issuer": {
-            "commonName": 5,
-            "organization": 6,
-            "locality": 7,
-            "state": 8,
-            "country": 9,
-        },
-        "validity": {
-            "notBefore": 10,
-            "notAfter": 11,
-        },
-        "subjectAltName": {
-            "dnsNames": 12,
-            "ipAddresses": 13,
-            "emailAddresses": 14,
-            "uris": 15,
-        },
-        "publicKeyInfo": {
-            "algorithm": 16,
-            "keySize": 17,
-            "publicKey": 18
-        },
-        "miscellaneous": {
-            "version": 19,
-            "serialNumber": 20,
-            "signatureAlgorithm": 21,
-        },
-        "fingerprints": {
-            "sha1": 22,
-            "_sha256": 23,
-        },
-        "basicConstraints": {
-            "isCA": 24,
-            "pathLenConstraint": 25,
-        },
-        "extensions": {
-            "subjectAddress": 26,
-            "issuerAddress": 27,
-            "blockchainName": 28,
-            "caAddress": 29,
-        },
-        "subjectKeyIdentifier": 30,
-        "authorityKeyIdentifier": 31,
-        "signature": 32,
-    }
-
-    // eslint-disable-next-line
     const [accounts, setAccounts] = useState([]);
     const [contractDetails, setContractDetails] = useState({
         contractAddress: '',
@@ -80,31 +25,18 @@ function ConnectToContractPage() {
     const [renderInfo, setRenderInfo] = useReducer(renderReducer, defaultRenderInfo);
 
     function renderReducer(state, action) {
-        let tempState = { ...state, ...action };
-        if ((action.renderOption !== undefined && action.renderOption !== state.renderOption) || action.reset) tempState = defaultRenderInfo;
-        if (action.reset) tempState.renderOption = state.renderOption;
-        if (action.renderOption !== undefined) tempState.renderOption = action.renderOption;
-        switch (tempState.renderOption) {
-            case 'requestCertificate':
-                break;
-            case 'getCertificateStatus':
-                break;
-            case 'getCertificate':
-                break;
-            case 'OldestPendingCertificate':
-                if (!tempState.isPendingCertificateCallDone) {
-                    getPendingCertificate();
-                    tempState.loading = true;
-                    tempState.isPendingCertificateCallDone = true;
-                }
-                break;
-            case 'revokeCertificate':
-                break;
-            default:
+        let newState = { ...state, ...action };
+        if ((action.renderOption !== undefined && action.renderOption !== state.renderOption) || action.reset) newState = defaultRenderInfo; // changing render or resetting the same render
+        if (action.reset) newState.renderOption = state.renderOption;  // preserving renderOption while resetting
+        if (action.renderOption !== undefined) newState.renderOption = action.renderOption; // changing render
+        if (newState.renderOption === 'OldestPendingCertificate' && !newState.isPendingCertificateCallDone) {
+            getPendingCertificate();
+            newState.loading = true;
+            newState.isPendingCertificateCallDone = true;
         }
         console.log('action: ', action);
-        console.log('new State: ', tempState);
-        return tempState;
+        console.log('new State: ', newState);
+        return newState;
     }
 
     const navigate = useNavigate();
@@ -123,14 +55,10 @@ function ConnectToContractPage() {
         // eslint-disable-next-line
     }, []);
 
-    // 0x9142A507e93233A51219973C5DBe25E5789D135c
+    // 0x38ec061548842e5901CC53Aa5a6D135412a6f999
     async function connectToContract() {
         try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-
-            const abi = pkiJson['abi'];
-            const contract = new ethers.Contract(contractDetails.contractAddress, abi, signer);
+            const contract = connect(contractDetails.contractAddress);
             const owner = await contract.owner();
             const account = accounts[0];
             setContractDetails({
@@ -195,31 +123,24 @@ function ConnectToContractPage() {
         setRenderInfo({ 'loading': true });
         try {
             if (renderInfo.certificate[index['basicConstraints']['isCA']] === 'true') {
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                const signer = provider.getSigner();
-
-                const abi = pkiJson['abi'];
-                const bytecode = pkiJson['bytecode'];
-                const PKI = new ethers.ContractFactory(abi, bytecode, signer);
-                const subCacontract = await PKI.deploy();
-                await subCacontract.deployed();
+                const subCacontract = await deploy();
                 console.log('Contract Address: ', subCacontract.address);
                 console.log('Owner: ', await subCacontract.owner());
                 console.log('Account : ', accounts[0]);
 
-                let tx = await contractDetails.contract.issuePendingCertificate(event.target.signature.value, subCacontract.address);
+                let tx = await contractDetails.contract.issuePendingCertificate(event.target.signature.value, subCacontract.address, event.target.subjectKeyIdentifier.value, event.target.certificate.value);
                 await tx.wait();
 
                 const tempSubCaCertificate = await contractDetails.contract["getCertificate(uint256)"](renderInfo.certificate[index['miscellaneous']['serialNumber']]);
-                tx = await subCacontract.populateCaCertificate(tempSubCaCertificate);
+                tx = await subCacontract.populateCaCertificate(tempSubCaCertificate, event.target.certificate.value);
                 await tx.wait();
 
-                tx = await subCacontract.transferOwnership(renderInfo.certificate[index['extensions']['subjectAddress']]);
+                tx = await subCacontract.transferOwnership(renderInfo.certificate[index['extensions']['subjectWalletAddress']]);
                 await tx.wait();
                 console.log('Owner: ', await subCacontract.owner());
             }
             else {
-                let tx = await contractDetails.contract.issuePendingCertificate(event.target.signature.value, "");
+                let tx = await contractDetails.contract.issuePendingCertificate(event.target.signature.value, "", event.target.subjectKeyIdentifier.value, event.target.certificate.value);
                 await tx.wait();
             }
             setRenderInfo({ 'showSerialNumber': true, 'serialNumber': renderInfo.certificate[index['miscellaneous']['serialNumber']] });
@@ -330,6 +251,16 @@ function ConnectToContractPage() {
                                     <label htmlFor="signature">Signature: </label>
                                     <input key="OldestPendingCertificate" type="text" id="signature" required />
                                 </div>
+
+                                <div className="inputWrapper">
+                                    <label htmlFor="subjectKeyIdentifier">Subject Key Identifier: </label>
+                                    <input type="text" id="subjectKeyIdentifier" required />
+                                </div>
+
+                                <div className="inputWrapper">
+                                    <label htmlFor="certificate">Certificate(PEM): </label>
+                                    <textarea className="pemInput" type="text" id="certificate" required />
+                                </div>
                                 <button type="submit">Issue</button>
                                 <button onClick={rejectPendingCertificate}>Reject</button>
                             </form>
@@ -337,7 +268,11 @@ function ConnectToContractPage() {
                     )
                 }
                 else {
-                    return <div>No Pending Cerficates</div>;
+                    return (
+                        <React.Fragment>
+                            <div>No Pending Cerficates</div>
+                            <button onClick={() => setRenderInfo({ 'reset': true })}>Reload</button>
+                        </React.Fragment>);
                 }
             case 'revokeCertificate':
                 if (renderInfo.showSerialNumber) {

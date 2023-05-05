@@ -63,3 +63,7 @@ input:disabled {
     flex-direction: row;
     align-items: center;
 }
+
+.pemInput {
+    width: 45vw;
+}

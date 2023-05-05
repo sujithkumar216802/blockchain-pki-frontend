@@ -1,0 +1,53 @@
+{
+    "subject": {
+        "commonName": 0,
+        "organization": 1,
+        "locality": 2,
+        "state": 3,
+        "country": 4
+    },
+    "issuer": {
+        "commonName": 5,
+        "organization": 6,
+        "locality": 7,
+        "state": 8,
+        "country": 9
+    },
+    "validity": {
+        "notBefore": 10,
+        "notAfter": 11
+    },
+    "subjectAltName": {
+        "dnsNames": 12,
+        "ipAddresses": 13,
+        "emailAddresses": 14,
+        "uris": 15
+    },
+    "publicKeyInfo": {
+        "algorithm": 16,
+        "keySize": 17,
+        "publicKey": 18
+    },
+    "miscellaneous": {
+        "version": 19,
+        "serialNumber": 20,
+        "signatureAlgorithm": 21
+    },
+    "fingerprints": {
+        "sha1": 22,
+        "_sha256": 23
+    },
+    "basicConstraints": {
+        "isCA": 24,
+        "pathLenConstraint": 25
+    },
+    "extensions": {
+        "subjectWalletAddress": 26,
+        "issuerContractAddress": 27,
+        "blockchainName": 28,
+        "contractAddress": 29
+    },
+    "subjectKeyIdentifier": 30,
+    "authorityKeyIdentifier": 31,
+    "signature": 32
+}
