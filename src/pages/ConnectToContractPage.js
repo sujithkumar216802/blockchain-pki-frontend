@@ -21,12 +21,12 @@ function ConnectToContractPage() {
         contract: null,
         isOwner: false,
     });
-    const defaultRenderInfo = { 'renderOption': 'getCertificateStatus', 'status': '', 'serialNumber': '', 'isPendingCertificate': false, 'isPendingCertificateCallDone': false, 'certificate': [], 'loading': false, 'showSerialNumber': false };
+    const defaultRenderInfo = { 'renderOption': 'getCertificateStatus', 'status': '', 'serialNumber': '', 'isPendingCertificate': false, 'isPendingCertificateCallDone': false, 'certificate': [], 'certificateFile': '', 'loading': false, 'showSerialNumber': false };
     const [renderInfo, setRenderInfo] = useReducer(renderReducer, defaultRenderInfo);
 
     function renderReducer(state, action) {
         let newState = { ...state, ...action };
-        if ((action.renderOption !== undefined && action.renderOption !== state.renderOption) || action.reset) newState = defaultRenderInfo; // changing render or resetting the same render
+        if (action.renderOption !== undefined || action.reset) newState = defaultRenderInfo; // changing render or resetting the same render
         if (action.reset) newState.renderOption = state.renderOption;  // preserving renderOption while resetting
         if (action.renderOption !== undefined) newState.renderOption = action.renderOption; // changing render
         if (newState.renderOption === 'OldestPendingCertificate' && !newState.isPendingCertificateCallDone) {
@@ -57,6 +57,7 @@ function ConnectToContractPage() {
 
     // 0x38ec061548842e5901CC53Aa5a6D135412a6f999
     async function connectToContract() {
+        setRenderInfo({ 'loading': true });
         try {
             const contract = connect(contractDetails.contractAddress);
             const owner = await contract.owner();
@@ -69,6 +70,7 @@ function ConnectToContractPage() {
         } catch (err) {
             console.error('error occured while connecting to contract: ', err);
         }
+        setRenderInfo({ 'loading': false });
     }
 
     async function getCertificateStatus(event) {
@@ -79,7 +81,7 @@ function ConnectToContractPage() {
         try {
             const status = await contractDetails.contract.getCertificateStatus(serialNumber);
             console.log('status: ', status);
-            setRenderInfo({ 'renderOption': 'getCertificateStatus', 'status': correspondingStatus[status] });
+            setRenderInfo({ 'status': correspondingStatus[status] });
         } catch (err) {
             console.error('error occured while getting status: ', err);
         }
@@ -92,11 +94,25 @@ function ConnectToContractPage() {
         const serialNumber = event.target.serialNumber.value;
         console.log('serialNumber: ', serialNumber);
         try {
-            console.time('Execution Time');
             const certificate = await contractDetails.contract["getCertificate(uint256)"](serialNumber);
-            console.timeEnd('Execution Time');
             console.log('certificate: ', certificate);
-            setRenderInfo({ 'renderOption': 'getCertificate', 'certificate': certificate });
+            setRenderInfo({ 'certificate': certificate });
+        }
+        catch (err) {
+            console.error('error occured while getting certificate: ', err);
+        }
+        setRenderInfo({ 'loading': false });
+    }
+
+    async function getCertificatePEM(event) {
+        event.preventDefault();
+        setRenderInfo({ 'loading': true });
+        const serialNumber = event.target.serialNumber.value;
+        console.log('serialNumber: ', serialNumber);
+        try {
+            const certificate = await contractDetails.contract["getCertificateFile(uint256)"](serialNumber);
+            console.log('certificateFile: ', certificate);
+            setRenderInfo({ 'certificateFile': certificate });
         }
         catch (err) {
             console.error('error occured while getting certificate: ', err);
@@ -221,6 +237,16 @@ function ConnectToContractPage() {
                         <button type="submit">Get Certificate Status</button>
                         {renderInfo.status !== '' ? <p>Status: {renderInfo.status}</p> : null}
                     </form>);
+            case 'getCertificatePEM':
+                return (
+                    <form onSubmit={getCertificatePEM}>
+                        <div className="inputWrapper">
+                            <label htmlFor="serialNumber">Serial No. : </label>
+                            <input key="getCertificatePEM" type="number" id="serialNumber" value={renderInfo.serialNumber} onChange={(event) => setRenderInfo({ 'serialNumber': event.target.value })} required />
+                        </div>
+                        <button type="submit">Get Certificate in PEM format</button>
+                        {renderInfo.certificateFile !== '' ? <p>Certificate: <br></br>{renderInfo.certificateFile}</p> : null}
+                    </form>);
             case 'getCertificate':
                 return (
                     <React.Fragment>
@@ -300,37 +326,47 @@ function ConnectToContractPage() {
         <div id="ConnectToContract">
             <h1>Contract</h1>
             {contractDetails.contract == null ?
-                <div className="inputWrapper">
-                    <label htmlFor="contractAddress">Contract Address</label>
-                    <input type="text" id="contractAddress" value={contractDetails.contractAddress} onChange={(event) => setContractDetails({ ...contractDetails, 'contractAddress': event.target.value })} />
-                    <button onClick={connectToContract}>Connect</button>
-                </div> :
+                <React.Fragment>
+                    {renderInfo.loading ?
+                        <div className="loadingWrapper">Loading...</div> :
+                        <div className="inputWrapper">
+                            <label htmlFor="contractAddress">Contract Address</label>
+                            <input type="text" id="contractAddress" value={contractDetails.contractAddress} onChange={(event) => setContractDetails({ ...contractDetails, 'contractAddress': event.target.value })} />
+                            <button onClick={connectToContract}>Connect</button>
+                        </div>
+                    }
+                </React.Fragment> :
                 <div id="ConnectToContract">
                     <p>Contract Address: {contractDetails.contract.address}</p>
                     <form onChange={(event) => setRenderInfo({ 'renderOption': event.target.value })}>
                         <div className="inputWrapper">
                             <label className="wideLabel" htmlFor="getCertificateStatus">Get Certificate Status</label>
-                            <input checked={renderInfo.renderOption === "getCertificateStatus"} type="radio" value="getCertificateStatus" id="getCertificateStatus" name="option" />
+                            <input checked={renderInfo.renderOption === "getCertificateStatus"} type="radio" value="getCertificateStatus" id="getCertificateStatus" name="option" disabled={renderInfo.loading} />
                         </div>
                         <div className="inputWrapper">
                             <label className="wideLabel" htmlFor="getCertificate">Get Certificate</label>
-                            <input checked={renderInfo.renderOption === "getCertificate"} type="radio" id="getCertificate" value="getCertificate" name="option" />
+                            <input checked={renderInfo.renderOption === "getCertificate"} type="radio" id="getCertificate" value="getCertificate" name="option" disabled={renderInfo.loading} />
+                        </div>
+                        <div className="inputWrapper">
+                            <label className="wideLabel" htmlFor="getCertificatePEM">Get Certificate (PEM)</label>
+                            <input checked={renderInfo.renderOption === "getCertificatePEM"} type="radio" id="getCertificatePEM" value="getCertificatePEM" name="option" disabled={renderInfo.loading} />
                         </div>
                         {contractDetails.isOwner ?
                             <React.Fragment>
                                 <div className="inputWrapper">
                                     <label className="wideLabel" htmlFor="OldestPendingCertificate">Get Oldest Pending Certificate</label>
-                                    <input checked={renderInfo.renderOption === "OldestPendingCertificate"} type="radio" id="OldestPendingCertificate" value="OldestPendingCertificate" name="option" />
+                                    <input checked={renderInfo.renderOption === "OldestPendingCertificate"} type="radio" id="OldestPendingCertificate" value="OldestPendingCertificate" name="option" disabled={renderInfo.loading} />
                                 </div>
                                 <div className="inputWrapper">
                                     <label className="wideLabel" htmlFor="revokeCertificate">Revoke Certificate</label>
-                                    <input checked={renderInfo.renderOption === "revokeCertificate"} type="radio" id="revokeCertificate" value="revokeCertificate" name="option" />
+                                    <input checked={renderInfo.renderOption === "revokeCertificate"} type="radio" id="revokeCertificate" value="revokeCertificate" name="option" disabled={renderInfo.loading} />
                                 </div>
                             </React.Fragment>
                             : <div className="inputWrapper">
                                 <label className="wideLabel" htmlFor="requestCertificate">Request Certificate</label>
-                                <input checked={renderInfo.renderOption === "requestCertificate"} type="radio" id="requestCertificate" value="requestCertificate" name="option" />
-                            </div>}
+                                <input checked={renderInfo.renderOption === "requestCertificate"} type="radio" id="requestCertificate" value="requestCertificate" name="option" disabled={renderInfo.loading} />
+                            </div>
+                        }
                     </form>
                     {renderSwitch()}
                 </div>
