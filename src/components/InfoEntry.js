@@ -4,10 +4,10 @@ import React, { useEffect, useReducer, useState } from 'react';
 // type: root, user, view
 function InfoEntryPage({ type, handleSubmit, viewFormValues }) {
     const preDefinedValues = {
-        'root': ['Blockchain Root CA', 'Root CA', 'TRZ', 'TN', 'IN', 'Blockchain Root CA', 'Root CA', 'TRZ', 'TN', 'IN', '1681161711', '1781161711', '', '', '', '', 'Elliptic Curve', '256', '-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsEZJNX3MoIKV6wGhDlDAim6tEzNY\nEHFiXE4Bj3P6E4ByLyhAXBQceh8nWkNV++pR2QJthp1MOU5MjSgDZwP/+Q==\n-----END PUBLIC KEY-----\n', '', '0', '', '', '', 'true', '0', '', '', 'Sepolia', '', '', '', ''],
-        'sub': ['Blockchain Sub CA', 'Sub CA', 'TRZ', 'TN', 'IN', '', '', '', '', '', '1681161711', '1781161711', '', '', '', '', 'Elliptic Curve', '256', '-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyr22bAfzCodGYy0IdJ4GRxsPpCpC\nU77ryZ2s7G1lU82RC2Cdla8l5kTBqNOv6BWBuvB719D0XYR8AgZYFiMrTA==\n-----END PUBLIC KEY-----\n', '', '', '', '', '', 'true', '0', '', '', 'Sepolia', '', '', '', ''],
-        'user': ['Blockchain User 1', 'User', 'TRZ', 'TN', 'IN', '', '', '', '', '', '1681161711', '1781161711', '', '', '', '', 'Elliptic Curve', '256', '-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEjDJKkm4hyupJ5TMqvxNQSvrCchaW\nR4V1F8WyChIQOSC4vE3gTWGk9byfs+mkGI+2CsN9iIRJbkchdvBS6qlu6Q==\n-----END PUBLIC KEY-----\n', '', '', '', '', '', 'false', '0', '', '', 'Sepolia', '', '', '', ''],
-        'reject': ['Blockchain User 2', 'User', 'TRZ', 'TN', 'IN', '', '', '', '', '', '1681161711', '1781161711', '', '', '', '', 'Elliptic Curve', '256', '-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEavg9X1BhphAtCg5phZirIyuDcmbk\n8K2nLxaSLndq3f1mjGGIW0NIxbNPOrK3pfzPqgQoZFkDZznSHbam+Sd0IA==\n-----END PUBLIC KEY-----\n', '', '', '', '', '', 'false', '0', '', '', 'Sepolia', '', '', '', '']
+        "root": ["Blockchain Root CA", "Root CA", "TRZ", "TN", "IN", "Blockchain Root CA", "Root CA", "TRZ", "TN", "IN", "1681161711", "1781161711", "", "", "", "", "Elliptic Curve", "256", "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEsEZJNX3MoIKV6wGhDlDAim6tEzNY\nEHFiXE4Bj3P6E4ByLyhAXBQceh8nWkNV++pR2QJthp1MOU5MjSgDZwP/+Q==\n-----END PUBLIC KEY-----\n", "", "0", "", "", "", "true", "0", "", "", "Sepolia", "", "", "", ""],
+        "sub": ["Blockchain Sub CA", "Sub CA", "TRZ", "TN", "IN", "", "", "", "", "", "1681161711", "1781161711", "", "", "", "", "Elliptic Curve", "256", "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyr22bAfzCodGYy0IdJ4GRxsPpCpC\nU77ryZ2s7G1lU82RC2Cdla8l5kTBqNOv6BWBuvB719D0XYR8AgZYFiMrTA==\n-----END PUBLIC KEY-----\n", "", "", "", "", "", "true", "0", "", "", "Sepolia", "", "", "", ""],
+        "user": ["Blockchain User 1", "User", "TRZ", "TN", "IN", "", "", "", "", "", "1681161711", "1781161711", "", "", "", "", "Elliptic Curve", "256", "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEjDJKkm4hyupJ5TMqvxNQSvrCchaW\nR4V1F8WyChIQOSC4vE3gTWGk9byfs+mkGI+2CsN9iIRJbkchdvBS6qlu6Q==\n-----END PUBLIC KEY-----\n", "", "", "", "", "", "false", "0", "", "", "Sepolia", "", "", "", ""],
+        "reject": ["Blockchain User 2", "User", "TRZ", "TN", "IN", "", "", "", "", "", "1681161711", "1781161711", "", "", "", "", "Elliptic Curve", "256", "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEavg9X1BhphAtCg5phZirIyuDcmbk\n8K2nLxaSLndq3f1mjGGIW0NIxbNPOrK3pfzPqgQoZFkDZznSHbam+Sd0IA==\n-----END PUBLIC KEY-----\n", "", "", "", "", "", "false", "0", "", "", "Sepolia", "", "", "", ""]
     }
 
     const keys = ["SubjectCommonName", "SubjectOrganization", "SubjectLocality", "SubjectState", "SubjectCountry", "IssuerCommonName", "IssuerOrganization", "IssuerLocality", "IssuerState", "IssuerCountry", "ValidityNotBefore", "ValidityNotAfter", "DnsNames", "IpAddresses", "EmailAddresses", "URIs", "PublicKeyAlgorithm", "PublicKeySize", "PublicKeyValue", "Version", "SerialNumber", "SignatureAlgorithm", "SHA1", "SHA256", "IsCA", "PathLengthConstraint", "SubjectWalletAddress", "IssuerContractAddress", "BlockchainName", "ContractAddress", "SubjectKeyIdentifier", "AuthorityKeyIdentifier", "Signature"];
@@ -28,7 +28,9 @@ function InfoEntryPage({ type, handleSubmit, viewFormValues }) {
 
     function submit(event) {
         event.preventDefault();
-        if (type === 'root') return handleSubmit(formValues, pem);
+        const temporaryPEM = pem.replace(/\\n/g, '\n');
+        console.log(temporaryPEM);
+        if (type === 'root') return handleSubmit(formValues, temporaryPEM);
         handleSubmit(formValues);
     }
 
@@ -227,6 +229,14 @@ function InfoEntryPage({ type, handleSubmit, viewFormValues }) {
                     </React.Fragment>
                 }
             </form>
+            <button onClick={async () => {
+                try {
+                    await navigator.clipboard.writeText(JSON.stringify(formValues));
+                    console.log('Content copied to clipboard');
+                } catch (err) {
+                    console.error('Failed to copy: ', err);
+                }
+            }}>Copy Values For Backend</button>
             {type !== 'view' ?
                 <div id="preDefinedButtons">
                     <button onClick={() => dispatchFormValues({ 'copy': 'root' })}>Fill Root CA Values</button>

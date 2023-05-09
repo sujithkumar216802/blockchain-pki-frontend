@@ -13,3 +13,7 @@ input[type=radio] {
 .wideLabel {
     width: 60vw;
 }
+
+.display-linebreak {
+    white-space: pre-line;
+}

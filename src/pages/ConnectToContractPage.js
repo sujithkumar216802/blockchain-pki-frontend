@@ -55,7 +55,6 @@ function ConnectToContractPage() {
         // eslint-disable-next-line
     }, []);
 
-    // 0x38ec061548842e5901CC53Aa5a6D135412a6f999
     async function connectToContract() {
         setRenderInfo({ 'loading': true });
         try {
@@ -79,7 +78,7 @@ function ConnectToContractPage() {
         const serialNumber = event.target.serialNumber.value;
         console.log('serialNumber: ', serialNumber);
         try {
-            const status = await contractDetails.contract.getCertificateStatus(serialNumber);
+            const status = await contractDetails.contract["getCertificateStatus(uint256)"](serialNumber);
             console.log('status: ', status);
             setRenderInfo({ 'status': correspondingStatus[status] });
         } catch (err) {
@@ -104,6 +103,20 @@ function ConnectToContractPage() {
         setRenderInfo({ 'loading': false });
     }
 
+    async function getCaCertificate(event) {
+        event.preventDefault();
+        setRenderInfo({ 'loading': true });
+        try {
+            const certificate = await contractDetails.contract.getCaCertificate();
+            console.log('certificate: ', certificate);
+            setRenderInfo({ 'certificate': certificate });
+        }
+        catch (err) {
+            console.error('error occured while getting certificate: ', err);
+        }
+        setRenderInfo({ 'loading': false });
+    }
+
     async function getCertificatePEM(event) {
         event.preventDefault();
         setRenderInfo({ 'loading': true });
@@ -111,6 +124,20 @@ function ConnectToContractPage() {
         console.log('serialNumber: ', serialNumber);
         try {
             const certificate = await contractDetails.contract["getCertificateFile(uint256)"](serialNumber);
+            console.log('certificateFile: ', certificate);
+            setRenderInfo({ 'certificateFile': certificate });
+        }
+        catch (err) {
+            console.error('error occured while getting certificate: ', err);
+        }
+        setRenderInfo({ 'loading': false });
+    }
+
+    async function getCaCertificatePEM(event) {
+        event.preventDefault();
+        setRenderInfo({ 'loading': true });
+        try {
+            const certificate = await contractDetails.contract.caCertificateFile();
             console.log('certificateFile: ', certificate);
             setRenderInfo({ 'certificateFile': certificate });
         }
@@ -137,6 +164,7 @@ function ConnectToContractPage() {
     async function issuePendingCertificate(event) {
         event.preventDefault();
         setRenderInfo({ 'loading': true });
+        const PEM = event.target.certificate.value.replace(/\\n/g, '\n');
         try {
             if (renderInfo.certificate[index['basicConstraints']['isCA']] === 'true') {
                 const subCacontract = await deploy();
@@ -144,7 +172,7 @@ function ConnectToContractPage() {
                 console.log('Owner: ', await subCacontract.owner());
                 console.log('Account : ', accounts[0]);
 
-                let tx = await contractDetails.contract.issuePendingCertificate(event.target.signature.value, subCacontract.address, event.target.subjectKeyIdentifier.value, event.target.certificate.value);
+                let tx = await contractDetails.contract.issuePendingCertificate(event.target.signature.value, subCacontract.address, event.target.subjectKeyIdentifier.value, PEM);
                 await tx.wait();
 
                 const tempSubCaCertificate = await contractDetails.contract["getCertificate(uint256)"](renderInfo.certificate[index['miscellaneous']['serialNumber']]);
@@ -156,7 +184,7 @@ function ConnectToContractPage() {
                 console.log('Owner: ', await subCacontract.owner());
             }
             else {
-                let tx = await contractDetails.contract.issuePendingCertificate(event.target.signature.value, "", event.target.subjectKeyIdentifier.value, event.target.certificate.value);
+                let tx = await contractDetails.contract.issuePendingCertificate(event.target.signature.value, "", event.target.subjectKeyIdentifier.value, PEM);
                 await tx.wait();
             }
             setRenderInfo({ 'showSerialNumber': true, 'serialNumber': renderInfo.certificate[index['miscellaneous']['serialNumber']] });
@@ -239,14 +267,17 @@ function ConnectToContractPage() {
                     </form>);
             case 'getCertificatePEM':
                 return (
-                    <form onSubmit={getCertificatePEM}>
-                        <div className="inputWrapper">
-                            <label htmlFor="serialNumber">Serial No. : </label>
-                            <input key="getCertificatePEM" type="number" id="serialNumber" value={renderInfo.serialNumber} onChange={(event) => setRenderInfo({ 'serialNumber': event.target.value })} required />
-                        </div>
-                        <button type="submit">Get Certificate in PEM format</button>
-                        {renderInfo.certificateFile !== '' ? <p>Certificate: <br></br>{renderInfo.certificateFile}</p> : null}
-                    </form>);
+                    <React.Fragment>
+                        <form onSubmit={getCertificatePEM}>
+                            <div className="inputWrapper">
+                                <label htmlFor="serialNumber">Serial No. : </label>
+                                <input key="getCertificatePEM" type="number" id="serialNumber" value={renderInfo.serialNumber} onChange={(event) => setRenderInfo({ 'serialNumber': event.target.value })} required />
+                            </div>
+                            <button type="submit">Get Certificate in PEM format</button>
+                        </form>
+                        <button onClick={getCaCertificatePEM}>Get CA Certificate in PEM format</button>
+                        {renderInfo.certificateFile !== '' ? <div className="display-linebreak">Certificate: <br></br>{renderInfo.certificateFile}</div> : null}
+                    </React.Fragment>);
             case 'getCertificate':
                 return (
                     <React.Fragment>
@@ -257,6 +288,7 @@ function ConnectToContractPage() {
                             </div>
                             <button type="submit">Get Certificate</button>
                         </form>
+                        <button onClick={getCaCertificate}>Get CA Certificate</button>
                         {renderInfo.certificate.length !== 0 ? <InfoEntryPage key='view' type='view' viewFormValues={renderInfo.certificate} handleSubmit={requestCertificate} /> : null}
                     </React.Fragment>
                 );

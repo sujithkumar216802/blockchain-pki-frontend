@@ -54,7 +54,20 @@ function RootCaPage() {
         <div>
             <h1>Root CA Creation</h1>
             {loading ? <p className="center">Loading...</p> :
-                (contract ? <p>Contract Created, Address: {contract.address}</p> : <InfoEntryPage type='root' handleSubmit={handleSubmit} />)
+                (contract ?
+                    <React.Fragment>
+                        <p>Contract Created, Address: {contract.address}</p>
+                        <button onClick={async () => {
+                            try {
+                                await navigator.clipboard.writeText(contract.address);
+                                console.log('Content copied to clipboard');
+                            } catch (err) {
+                                console.error('Failed to copy: ', err);
+                            }
+                        }}>Copy Address</button>
+                    </React.Fragment>
+                    :
+                    <InfoEntryPage type='root' handleSubmit={handleSubmit} />)
             }
         </div >
     );
